@@ -1,0 +1,269 @@
+<script setup>
+defineProps({
+  settings: {
+    type: Object,
+    required: true
+  },
+  disguiseConfig: {
+    type: Object,
+    required: true
+  }
+});
+import Input from '../../ui/Input.vue';
+import Switch from '../../ui/Switch.vue';
+</script>
+
+<template>
+  <div class="space-y-6">
+    <!-- 订阅基本信息配置 -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-xl p-6 space-y-4 border border-gray-100 dark:border-gray-700 elevation-2 hover:elevation-3 transition-shadow duration-300">
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        订阅配置
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div>
+          <Input 
+            label="自定义订阅文件名"
+            v-model="settings.FileName"
+            class="rounded-xl"
+          />
+        </div>
+        <div>
+          <Input 
+            label="自定义订阅Token"
+            v-model="settings.mytoken"
+            class="rounded-xl"
+          />
+        </div>
+        <div>
+          <Input 
+            label="订阅组分享Token"
+            v-model="settings.profileToken"
+            placeholder="用于生成订阅组链接专用Token"
+            class="rounded-xl"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- 功能开关区域 -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-3xl p-6 space-y-4 border border-gray-100 dark:border-gray-700 elevation-2 hover:elevation-3 transition-shadow duration-300">
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+        功能控制
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 订阅自动更新间隔 -->
+        <div
+          class="flex flex-col p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-xl">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-gray-200">订阅自动更新间隔</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">页面打开时自动刷新订阅节点数和流量</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <div class="flex items-center gap-1">
+              <input
+                type="number"
+                :value="![0, 30, 60, 120].includes(settings.autoUpdateInterval) ? settings.autoUpdateInterval : ''"
+                @input="e => { const v = parseInt(e.target.value); if (v >= 5) settings.autoUpdateInterval = v; }"
+                placeholder="自定义"
+                min="5"
+                class="w-20 px-2 py-1.5 text-xs bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all"
+              >
+              <span class="text-xs text-gray-500 dark:text-gray-400">分钟</span>
+            </div>
+            <button
+              v-for="option in [
+                { value: 0, label: '禁用' },
+                { value: 30, label: '30分钟' },
+                { value: 60, label: '1小时' },
+                { value: 120, label: '2小时' }
+              ]"
+              :key="option.value"
+              @click="settings.autoUpdateInterval = option.value"
+              :class="[
+                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                settings.autoUpdateInterval === option.value
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              ]"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+          <p v-if="settings.autoUpdateInterval === 0" class="text-xs text-amber-600 dark:text-amber-400 mt-2">
+            ⚠️ 自动更新已禁用，订阅信息需手动刷新
+          </p>
+        </div>
+
+        <!-- 访问日志 -->
+        <div
+          class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-xl">
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-200">开启访问日志 & 计数</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">记录订阅访问并统计流量与IP</p>
+          </div>
+          <Switch 
+            v-model="settings.enableAccessLog"
+          />
+        </div>
+
+        <!-- 流量统计节点 -->
+        <div
+          class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-xl">
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-200">显示流量统计节点</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">在订阅中生成虚拟节点显示剩余流量</p>
+          </div>
+          <Switch 
+            v-model="settings.enableTrafficNode"
+          />
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Web 访问控制 -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-3xl p-6 space-y-4 border border-gray-100 dark:border-gray-700 elevation-2 hover:elevation-3 transition-shadow duration-300">
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+        </svg>
+        Web 访问控制
+      </h3>
+
+      <div
+        class="bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-xl divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+        <!-- 公开页访问 -->
+        <div
+          class="p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-200">允许未登录访问公开页</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">关闭后访问首页将跳转登录页面</p>
+          </div>
+          <Switch 
+            v-model="settings.enablePublicPage"
+          />
+        </div>
+
+        <!-- 伪装页面 -->
+        <div class="p-4 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-gray-200">启用伪装页面</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">浏览器访问订阅链接时显示伪装内容，防止被探测</p>
+            </div>
+            <Switch 
+              v-model="disguiseConfig.enabled"
+            />
+          </div>
+
+          <!-- 自定义登录路径设置 -->
+          <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
+             <div class="max-w-md">
+                <Input 
+                  label="自定义管理后台路径"
+                  v-model="settings.customLoginPath"
+                  placeholder="默认: login"
+                  prefix="/"
+                />
+             </div>
+             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+               设置后，只有访问此路径才能进入登录页面。默认路径 <code>/login</code> 将失效（除非未设置）。
+             </p>
+          </div>
+
+            <div v-show="disguiseConfig.enabled"
+            class="bg-white dark:bg-gray-800 rounded-md p-4 space-y-4 border border-gray-200 dark:border-gray-600 transition-all duration-300">
+            <div>
+              <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">伪装策略</label>
+              <div class="flex flex-col sm:flex-row gap-4">
+                <label class="flex items-center cursor-pointer group">
+                  <input type="radio" value="default" v-model="disguiseConfig.pageType"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 dark:bg-gray-800">
+                  <div class="ml-3">
+                    <span
+                      class="block text-sm font-medium text-gray-900 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">默认
+                      404</span>
+                    <span class="block text-xs text-gray-500">显示标准的 404 Not Found 页面</span>
+                  </div>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                  <input type="radio" value="redirect" v-model="disguiseConfig.pageType"
+                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 dark:bg-gray-800">
+                  <div class="ml-3">
+                    <span
+                      class="block text-sm font-medium text-gray-900 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">URL
+                      跳转</span>
+                    <span class="block text-xs text-gray-500">自动重定向到指定的网页地址</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div v-if="disguiseConfig.pageType === 'redirect'" class="animate-fade-in-down">
+              <div>
+                <Input 
+                  label="目标网址"
+                  v-model="disguiseConfig.redirectUrl"
+                  placeholder="www.example.com"
+                  type="url"
+                  prefix="https://"
+                />
+              </div>
+            </div>
+
+            <div
+              class="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0 mt-0.5" viewBox="0 0 20 20"
+                fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd" />
+              </svg>
+              <span>伪装仅对浏览器 (User-Agent) 访问生效，不会影响 Clash、V2Ray 等代理客户端的正常订阅更新。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Toggle Switch CSS */
+
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>
