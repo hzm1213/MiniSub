@@ -1,0 +1,40 @@
+name: Sync MiSub Upstream
+
+on:
+  schedule:
+    - cron: '0 1 * * *' # 每天凌晨1点
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repo to get workflow file
+        uses: actions/checkout@v4
+
+      - name: Clone MiSub upstream repository
+        run: |
+          git clone --depth=1 https://github.com/imzyb/MiSub.git upstream
+
+      - name: Copy workflow file into upstream folder
+        run: |
+          mkdir -p upstream/.github/workflows
+          cp .github/workflows/sync.yml upstream/.github/workflows/sync.yml
+
+      - name: Initialize target repository and push
+        run: |
+          cd upstream
+
+          # 删除上游 .git 信息
+          rm -rf .git
+
+          # 重新初始化为你的仓库
+          git init
+          git config user.name "hzm1213"
+          git config user.email "huangzm1213@gmail.com"
+          git add .
+          git commit -m "Sync from imzyb/MiSub at $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git branch -M main
+          git remote add origin https://hzm1213:${{ secrets.MY_TOKEN }}@github.com/hzm1213/MiniSub.git
+          git push origin main --force
